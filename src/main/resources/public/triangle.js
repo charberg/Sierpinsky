@@ -1,22 +1,49 @@
-var width;
-var height;
+var width = 300;
+var height = 300;
 var length;
 var maxDepth = 5;
 var depth = 0;
-
+var svg;
+var div;
 
 $(document).ready(function () {
+    //init();
+
+
+
+    var ns = 'http://www.w3.org/2000/svg'
+    div = document.getElementById('drawing')
+    svg = document.createElementNS(ns, 'svg')
+    svg.setAttributeNS(null, 'id', 'svg-id')
+    svg.setAttributeNS(null, 'width', '100%')
+    svg.setAttributeNS(null, 'height', '100%')
+    div.appendChild(svg)
+
+    /*var rect = document.createElementNS(ns, 'rect')
+    rect.setAttributeNS(null, 'width', 100)
+    rect.setAttributeNS(null, 'height', 100)
+    rect.setAttributeNS(null, 'fill', '#f06')
+    svg.appendChild(rect)*/
+
     init();
+
+    //Enable zoom/pan
+    var test = svgPanZoom('#svg-id', {
+        zoomEnabled: true,
+        controlIconsEnabled: false,
+        fit: true,
+        center: true,
+        minZoom: 0
+    });
+
+
 
 
 });
 
 function init() {
 
-    canvas = document.getElementById("triCanvas");
-    context = canvas.getContext('2d');
-    width = canvas.width;
-    height = canvas.height;
+
 
     //Calculate triangle line length
     length = height/Math.sin(60*Math.PI/180)    //Parameter conversion to radians
@@ -28,14 +55,16 @@ function init() {
 
 }
 
-function drawTriangle(t) {
+function drawLine(p1, p2) {
 
-    context.beginPath();
-    context.moveTo(t.p1.x, t.p1.y);
-    context.lineTo(t.p2.x, t.p2.y);
-    context.lineTo(t.p3.x, t.p3.y);
-    //context.lineTo(p1.x, p3.y);
-    context.closePath();
+    var aLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    aLine.setAttribute('x1', p1.x);
+    aLine.setAttribute('y1', p1.y);
+    aLine.setAttribute('x2', p2.x);
+    aLine.setAttribute('y2', p2.y);
+    aLine.setAttribute('stroke', "black");
+    aLine.setAttribute('stroke-width', 1);
+    svg.appendChild(aLine);
 
 }
 
@@ -68,20 +97,11 @@ function drawSubTriangles(t) {
 }
 
 
-function fillTriangle(t) {
-
-    context.save;
-    drawTriangle(t);
-    context.fill();
-    context.restore();
-
-}
 
 function sketchTriangle(t) {
-    context.save;
-    drawTriangle(t);
-    context.stroke();
-    context.restore();
+    drawLine(t.p1, t.p2);
+    drawLine(t.p2, t.p3);
+    drawLine(t.p3, t.p1);
 }
 
 function getCenter(p1, p2) {
