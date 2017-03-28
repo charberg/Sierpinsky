@@ -1,10 +1,14 @@
 var width = 300;
 var height = 300;
 var length;
+var maxInitDepth = 5;
 var maxDepth = 5;
+var zoomDepth = 0;
 var depth = 0;
 var svg;
+var svgg;  /* Top <g> element inside svg */
 var div;
+
 //2D array of triangles, where first index is their recursive depth at an offset
 var triangles;
 var zoomCount = 0;
@@ -12,26 +16,18 @@ var zoomCount = 0;
 $(document).ready(function () {
     //init();
 
-
-
     var ns = 'http://www.w3.org/2000/svg'
     div = document.getElementById('drawing')
     svg = document.createElementNS(ns, 'svg')
     svg.setAttributeNS(null, 'id', 'svg-id')
     svg.setAttributeNS(null, 'width', '100%')
     svg.setAttributeNS(null, 'height', '100%')
+    svgg = document.createElementNS(ns, 'g')
+    svg.appendChild(svgg)
     div.appendChild(svg)
 
-    /*var rect = document.createElementNS(ns, 'rect')
-    rect.setAttributeNS(null, 'width', 100)
-    rect.setAttributeNS(null, 'height', 100)
-    rect.setAttributeNS(null, 'fill', '#f06')
-    svg.appendChild(rect)*/
-
     init();
-
     enableZoomPan();
-
 });
 
 function init() {
@@ -81,18 +77,14 @@ function attachMouseWheelListener() {
         //Delta +1 -> scrolled up
         //Delta -1 -> scrolled down
         var delta = Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail)));
-        console.log(delta);
-
         zoomCount = zoomCount + delta;
-
-        if(zoomCount==15) {
-
+        if(zoomCount%15 == 0 && delta == 1) {
             for(var i = 0; i < triangles[0].length; i++) {
-                drawSubTriangles(triangles[0][i], false);
+                drawSubTriangles(triangles[zoomDepth][i], false);
             }
+            zoomDepth++;
             enableZoomPan();
         }
-
         return false;
     }
 }
@@ -107,16 +99,16 @@ function drawLine(p1, p2) {
     line.setAttribute('y2', p2.y);
     line.setAttribute('stroke', "black");
     line.setAttribute('stroke-width', 1);
-    svg.appendChild(line);
+    svgg.appendChild(line);
 
 }
 
 //Recursive parameter if you want to draw recursively, or just stop after one level
 function drawSubTriangles(t, recursive) {
     //End condition, bounded by maximum recursion depth
-    if(depth == maxDepth && recursive==true) {
+    if(depth == maxDepth && recursive == true) {
         //Push triangle to depth collection, to track in case zooming in and redrawing
-        triangles[maxDepth-depth].push(t);
+        triangles[zoomDepth].push(t);
         return;
     }
 
@@ -132,6 +124,10 @@ function drawSubTriangles(t, recursive) {
     midTriangle = new Triangle(midPoint1, midPoint2, midPoint3);
 
     sketchTriangle(midTriangle)
+
+    if(recursive == false) {
+        triangles[zoomDepth+1].push(midTriangle);
+    }
 
     //Recursive call to continue drawing children triangles until max depth
     if(recursive == true) {
